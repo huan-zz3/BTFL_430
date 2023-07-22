@@ -1,0 +1,38 @@
+#######################################
+# 数据类型/Datatypes (KEYWORD1)
+#######################################
+ 
+Sbus KEYWORD1
+ 
+#######################################
+# 函数/Functions (KEYWORD2)
+#######################################
+ 
+Startloop  KEYWORD2
+Startloop KEYWORD2
+Endloop KEYWORD2
+Allinit KEYWORD2
+Finetuning_changeValue KEYWORD2
+SetChannel_1 KEYWORD2
+SetChannel_2 KEYWORD2
+SetChannel_3 KEYWORD2
+SetChannel_4 KEYWORD2
+SetChannel_5 KEYWORD2
+SetChannel_6 KEYWORD2
+ChanneldataApply KEYWORD2
+looptask KEYWORD2
+ 
+#######################################
+# 其它关键字测试演示
+#######################################
+testKEYWORD1    KEYWORD1
+testKEYWORD2    KEYWORD2
+testKEYWORD3    KEYWORD3
+ 
+testLITERAL1    LITERAL1
+testLITERAL2    LITERAL2
+ 
+testRESERVED_WORD   RESERVED_WORD
+testRESERVED_WORD_2 RESERVED_WORD_2
+testDATA_TYPE   DATA_TYPE
+testPREPROCESSOR    PREPROCESSOR
