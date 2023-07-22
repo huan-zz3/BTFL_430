@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 
-namespace BTFLC
+namespace BTFLC	//定义常量
 {
 	typedef uint8_t errCodeType;
 	typedef uint8_t channelType;
@@ -23,14 +23,14 @@ namespace BTFLC
 	const channelType AUX1 = 4;
 }
 
-namespace BTFLErr
+namespace BTFLErr	//定义返回值
 {
 	using BTFLC::errCodeType;
 	const errCodeType BTFL_OK  = 0x01;
 	const errCodeType BTFL_NOFOUND = 0x02;
 	const errCodeType BTFL_threadERR = 0x03;
 }
-namespace BTFLVariable
+namespace BTFLVariable	//定义变量
 {
 	using BTFLC::dataType;
 	using BTFLC::Bytecount;
@@ -39,7 +39,7 @@ namespace BTFLVariable
 	dataType sendData[Bytecount];
 	TaskHandle_t xHandle, xHandle2;
 }
-namespace BTFLStruct
+namespace BTFLStruct	//定义结构体
 {
 	using BTFLC::errCodeType;
 	using BTFLErr::BTFL_OK;
@@ -53,7 +53,7 @@ namespace BTFLStruct
 		errCodeType errCode = BTFL_OK;
 	};
 }
-namespace BTFLNamespace
+namespace BTFLNamespace		//主要的命名空间，所有方法与类都写于此
 {
 	using namespace BTFLC;
 	using namespace BTFLErr;
@@ -65,14 +65,16 @@ namespace BTFLNamespace
 	
 	
 	class BTFLModel{
-	public:
+	public: //公有定义区间
 		uint8_t flyUnlock_Flag = 0;
+		// 设置sbus引脚
 		BTFLReturnVal setTXpin(uint8_t pinNum, uint8_t pinUless){
 			BTFLReturnVal RTN;
 			TXPIN = pinNum;
 			RXPIN = pinUless;
 			return RTN;
 		}
+		// sbus协议初始化
 		BTFLReturnVal allInit(void){
 			BTFLReturnVal RTN;
 			Serial1.begin(BAUD, SERIAL_8E2, RXPIN, TXPIN);
@@ -84,6 +86,7 @@ namespace BTFLNamespace
 			sendData[24] = 0;  //0x00
 			return RTN;
 		}
+		// 设置sbus特定通道的以特定值
 		BTFLReturnVal flyDirection(channelType channelFlag, percentType percentage){
 			BTFLReturnVal RTN, sRTN;
 			percentage = dataHandle(channelFlag, percentage);
@@ -108,6 +111,7 @@ namespace BTFLNamespace
 			}
 			return RTN;
 		}
+		// sbus特定通道微调修补值
 		BTFLReturnVal fineTuningChangeValue(channelType channelFlag, uint16_t value){
 			BTFLReturnVal RTN;
 			switch(channelFlag){
@@ -131,6 +135,7 @@ namespace BTFLNamespace
 			}
 			return RTN;
 		}
+		// 前四通道复位
 		BTFLReturnVal flyReset(void){
 			BTFLReturnVal RTN;
 			RTN = SetChannel_1(0);
@@ -139,16 +144,19 @@ namespace BTFLNamespace
 			RTN = SetChannel_4(0);
 			return RTN;
 		}
+		// 飞控解锁
 		BTFLReturnVal flyUnlock(void){
 			BTFLReturnVal RTN;
 			xTaskCreatePinnedToCore(unLock, "unLock", 4096, NULL, 3, &xHandle, 1);
 			return RTN;
 		}
+		// 开始发送sbus协议
 		BTFLReturnVal startTaskLoop(void){
 			BTFLReturnVal RTN;
 			xTaskCreatePinnedToCore(mytaskloop, "mytaskloop", 4096, NULL, 1, &xHandle2, 0);
 			return RTN;
 		}
+		// 飞控锁定
 		BTFLReturnVal flyLock(void){
 			BTFLReturnVal RTN;
 			xTaskCreatePinnedToCore(Lock, "Lock", 4096, NULL, 1, &xHandle2, 0);
@@ -156,13 +164,14 @@ namespace BTFLNamespace
 		}
 		
 		
-	private:
+	private: //私有定义区间
 		Channel_defaultData chan1dd = { 250, 1700, 996, 0 };  //横滚
 		Channel_defaultData chan2dd = { 250, 1700, 996, 0 };  //俯仰
 		Channel_defaultData chan3dd = { 250, 1700, 996, 0 };  //油门
 		Channel_defaultData chan4dd = { 250, 1700, 996, 0 };  //方向
 		Channel_defaultData chan5dd = { 0, 110, 62, 0 };  //AUX1 1007~1307~1507~1707~2007
 		
+		//前五个通道值设置函数
 		BTFLReturnVal SetChannel_1(percentType percentage){
 			BTFLReturnVal RTN;
 			valueType temp = dataCount(chan1dd, percentage);
@@ -283,6 +292,7 @@ namespace BTFLNamespace
 			return RTN;
 		}
 		
+		//被SetChannel_x（1~5）函数调用，将输入的百分比数值转化为对应通道值
 		valueType dataCount(Channel_defaultData chanxdd, percentType percentage){
 			percentType temp;
 			if(percentage>0){
@@ -303,6 +313,7 @@ namespace BTFLNamespace
 			return static_cast<int>(temp);
 		}
 		
+		// 求2的特定平方值函数
 		unsigned int Equate_2(int count) {
 			unsigned int temp = 1;
 			for (int i = 0; i < count; i++) {
@@ -310,6 +321,8 @@ namespace BTFLNamespace
 			}
 			return temp;
 		}
+		
+		// 错误输入值处理
 		percentType dataHandle(channelType channelFlag, percentType percentage){
 			if(channelFlag == Up_and_Down){
 				if(percentage>1000 || percentage<0){
@@ -326,7 +339,10 @@ namespace BTFLNamespace
 		}
 	};
 	
+	// 创建类BTFLModel的一个对象实例btfl
 	BTFLModel btfl;
+	
+	//以下三个函数都是将被开启多线程的
 	void unLock(void *arg){
 		vTaskDelay(5000);
 		btfl.flyUnlock_Flag = 0;
@@ -360,7 +376,7 @@ namespace BTFLNamespace
 	}
 }
 
-namespace BTFL_ENV
+namespace BTFL_ENV	//调用此库时必需导入此命名空间，只能访问其中存在的部分，不在其中的部分对外屏蔽
 {
     using namespace BTFLErr;
 	using namespace BTFLC;
