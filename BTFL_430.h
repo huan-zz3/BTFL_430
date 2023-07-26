@@ -67,6 +67,12 @@ namespace BTFLNamespace		//主要的命名空间，所有方法与类都写于�
 	class BTFLModel{
 	public: //公有定义区间
 		uint8_t flyUnlock_Flag = 0;
+		percentType Forward_and_Back_percentage;
+		percentType Left_and_Right_percentage;
+		percentType Up_and_Down_percentage;
+		percentType rLeft_and_rRight_percentage;
+		percentType AUX1_percentage;
+		
 		// 设置sbus引脚
 		BTFLReturnVal setTXpin(uint8_t pinNum, uint8_t pinUless){
 			BTFLReturnVal RTN;
@@ -93,18 +99,23 @@ namespace BTFLNamespace		//主要的命名空间，所有方法与类都写于�
 			switch(channelFlag){
 				case Forward_and_Back:
 					sRTN = SetChannel_2(percentage);
+					Forward_and_Back_percentage = percentage;
 					break;
 				case Left_and_Right:
 					sRTN = SetChannel_1(percentage);
+					Left_and_Right_percentage = percentage;
 					break;
 				case Up_and_Down:
 					sRTN = SetChannel_3(percentage);
+					Up_and_Down_percentage = percentage;
 					break;
 				case rLeft_and_rRight:
 					sRTN = SetChannel_4(percentage);
+					rLeft_and_rRight_percentage = percentage;
 					break;
 				case AUX1:
 					sRTN = SetChannel_5(percentage);
+					AUX1_percentage = percentage;
 					break;
 				default:
 					RTN.errCode = BTFL_NOFOUND;
@@ -153,13 +164,14 @@ namespace BTFLNamespace		//主要的命名空间，所有方法与类都写于�
 		// 开始发送sbus协议
 		BTFLReturnVal startTaskLoop(void){
 			BTFLReturnVal RTN;
-			xTaskCreatePinnedToCore(mytaskloop, "mytaskloop", 4096, NULL, 1, &xHandle2, 0);
+			Serial.println("Sbus start");
+			xTaskCreatePinnedToCore(mytaskloop, "mytaskloop", 4096, NULL, 3, &xHandle2, 0);
 			return RTN;
 		}
 		// 飞控锁定
 		BTFLReturnVal flyLock(void){
 			BTFLReturnVal RTN;
-			xTaskCreatePinnedToCore(Lock, "Lock", 4096, NULL, 1, &xHandle2, 0);
+			xTaskCreatePinnedToCore(Lock, "Lock", 4096, NULL, 3, &xHandle2, 1);
 			return RTN;
 		}
 		
@@ -349,10 +361,10 @@ namespace BTFLNamespace		//主要的命名空间，所有方法与类都写于�
 
 		btfl.flyReset();
 		btfl.flyDirection(Up_and_Down, 0);
-		btfl.flyDirection(AUX1, -1000);
+		btfl.flyDirection(AUX1, 1000);
 		
 		vTaskDelay(5000);
-		btfl.flyDirection(AUX1, 1000);
+		btfl.flyDirection(AUX1, 0);
 		vTaskDelay(2000);
 		
 		btfl.flyUnlock_Flag = 1;
@@ -360,10 +372,11 @@ namespace BTFLNamespace		//主要的命名空间，所有方法与类都写于�
 	}
 	void Lock(void *arg){
 		btfl.flyReset();
-		btfl.flyDirection(AUX1, -1000);
+		btfl.flyDirection(AUX1, 1000);
 		vTaskDelete(NULL);
 	}
 	void mytaskloop(void *arg){
+		Serial.println("Sbus loop");
 		while (1) {
 			static unsigned long preview = millis();
 			if (millis() - preview >= 14) {
