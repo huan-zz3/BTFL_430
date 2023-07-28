@@ -92,6 +92,13 @@ namespace BTFLNamespace		//主要的命名空间，所有方法与类都写于�
 			sendData[24] = 0;  //0x00
 			return RTN;
 		}
+		// 开始发送sbus协议
+		BTFLReturnVal startTaskLoop(void){
+			BTFLReturnVal RTN;
+			Serial.println("Sbus start");
+			xTaskCreatePinnedToCore(mytaskloop, "mytaskloop", 4096, NULL, 3, &xHandle2, 0);
+			return RTN;
+		}
 		// 设置sbus特定通道的以特定值
 		BTFLReturnVal flyDirection(channelType channelFlag, percentType percentage){
 			BTFLReturnVal RTN, sRTN;
@@ -161,13 +168,7 @@ namespace BTFLNamespace		//主要的命名空间，所有方法与类都写于�
 			xTaskCreatePinnedToCore(unLock, "unLock", 4096, NULL, 3, &xHandle, 1);
 			return RTN;
 		}
-		// 开始发送sbus协议
-		BTFLReturnVal startTaskLoop(void){
-			BTFLReturnVal RTN;
-			Serial.println("Sbus start");
-			xTaskCreatePinnedToCore(mytaskloop, "mytaskloop", 4096, NULL, 3, &xHandle2, 0);
-			return RTN;
-		}
+		
 		// 飞控锁定
 		BTFLReturnVal flyLock(void){
 			BTFLReturnVal RTN;
@@ -177,10 +178,10 @@ namespace BTFLNamespace		//主要的命名空间，所有方法与类都写于�
 		
 		
 	private: //私有定义区间
-		Channel_defaultData chan1dd = { 250, 1700, 996, 0 };  //横滚
-		Channel_defaultData chan2dd = { 250, 1700, 996, 0 };  //俯仰
-		Channel_defaultData chan3dd = { 250, 1700, 996, 0 };  //油门
-		Channel_defaultData chan4dd = { 250, 1700, 996, 0 };  //方向
+		Channel_defaultData chan1dd = { 220, 1720, 996, 0 };  //横滚
+		Channel_defaultData chan2dd = { 220, 1720, 996, 0 };  //俯仰
+		Channel_defaultData chan3dd = { 220, 1720, 996, 0 };  //油门
+		Channel_defaultData chan4dd = { 220, 1720, 996, 0 };  //方向
 		Channel_defaultData chan5dd = { 0, 110, 62, 0 };  //AUX1 1007~1307~1507~1707~2007
 		
 		//前五个通道值设置函数
@@ -356,15 +357,17 @@ namespace BTFLNamespace		//主要的命名空间，所有方法与类都写于�
 	
 	//以下三个函数都是将被开启多线程的
 	void unLock(void *arg){
-		vTaskDelay(5000);
+		vTaskDelay(2000);
 		btfl.flyUnlock_Flag = 0;
 
 		btfl.flyReset();
 		btfl.flyDirection(Up_and_Down, 0);
 		btfl.flyDirection(AUX1, 1000);
 		
-		vTaskDelay(5000);
+		vTaskDelay(2000);
 		btfl.flyDirection(AUX1, 0);
+		vTaskDelay(2000);
+		btfl.flyDirection(AUX1, -900);
 		vTaskDelay(2000);
 		
 		btfl.flyUnlock_Flag = 1;
